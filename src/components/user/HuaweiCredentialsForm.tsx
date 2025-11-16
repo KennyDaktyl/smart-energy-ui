@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
-import { Box, Button, TextField, Typography, Paper, Alert } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Alert,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 interface Props {
   token: string;
-  onSaved?: () => void; 
+  onSaved?: () => void;
 }
 
-export default function HuaweiCredentialsForm({ token }: Props) {
+export default function HuaweiCredentialsForm({ token, onSaved }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     axios
@@ -24,8 +35,7 @@ export default function HuaweiCredentialsForm({ token }: Props) {
         setUsername(res.data.huawei_username);
         setPassword(res.data.huawei_password);
       })
-      .catch(() => {
-      });
+      .catch(() => {});
   }, [token]);
 
   const handleSave = async () => {
@@ -38,8 +48,12 @@ export default function HuaweiCredentialsForm({ token }: Props) {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setSaved(true);
       setMessage("Dane Huawei zapisane pomyślnie!");
+
+      if (onSaved) onSaved();
+
       setTimeout(() => setSaved(false), 2500);
     } catch (err: any) {
       setMessage(err.response?.data?.detail || "Błąd zapisu danych");
@@ -58,6 +72,7 @@ export default function HuaweiCredentialsForm({ token }: Props) {
         </Alert>
       )}
 
+      {/* USERNAME */}
       <TextField
         fullWidth
         label="Huawei Username"
@@ -65,13 +80,27 @@ export default function HuaweiCredentialsForm({ token }: Props) {
         onChange={(e) => setUsername(e.target.value)}
         margin="normal"
       />
+
+      {/* PASSWORD + toggle visibility */}
       <TextField
         fullWidth
         label="Huawei Password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         margin="normal"
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword((prev) => !prev)}
+                edge="end"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
       />
 
       <Button variant="contained" sx={{ mt: 2 }} onClick={handleSave}>
